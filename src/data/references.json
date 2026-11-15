@@ -187,5 +187,20 @@
         "url": "https://fonts.google.com/"
       }
     ]
+  },
+  {
+    "category": "吉原近現代沿革",
+    "items": [
+      {
+        "apa": "台東区立中央図書館 郷土・資料調査室. (2024, July). *吉原を知る*（パスファインダー No. 5，改訂第 4 版，p. 1）. Retrieved November 15, 2026, from https://www.city.taito.lg.jp/library/service/sonota/pathfinder.files/kyodo_no5_yoshiwara4.pdf",
+        "url": "https://www.city.taito.lg.jp/library/service/sonota/pathfinder.files/kyodo_no5_yoshiwara4.pdf",
+        "note": "用於《吉原夜櫻之圖》的現代地點對照；1958 年沿革依此館編製的地方史資料指南整理。"
+      },
+      {
+        "apa": "e-Gov法令検索. (n.d.). *売春防止法*（昭和三十一年法律第百十八号，附則）. Retrieved November 15, 2026, from https://laws.e-gov.go.jp/law/331AC0000000118",
+        "url": "https://laws.e-gov.go.jp/law/331AC0000000118",
+        "note": "附則區分 1957 年一般施行與 1958 年刑事規定施行；本展用於校正吉原近現代沿革的年份。"
+      }
+    ]
   }
 ]

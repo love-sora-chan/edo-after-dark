@@ -36,6 +36,7 @@ const isActive = (href: string) => path.startsWith(u(href));
   <link rel="preconnect" href="https://upload.wikimedia.org" />
 </head>
 <body>
+  <a class="skip-link" href="#main-content">跳到主要內容</a>
   <div class="grain" aria-hidden="true"></div>
   <header class:list={['nav', { overlay: navOverlay }]}>
     <a class="logo display" href={u('')}>江戶不打烊</a>
@@ -45,7 +46,7 @@ const isActive = (href: string) => path.startsWith(u(href));
     </nav>
   </header>
 
-  <main><slot /></main>
+  <main id="main-content" tabindex="-1"><slot /></main>
 
   <footer class="site-foot">
     <div class="foot-inner">
@@ -65,23 +66,45 @@ const isActive = (href: string) => path.startsWith(u(href));
     import { ScrollTrigger } from 'gsap/ScrollTrigger';
     gsap.registerPlugin(ScrollTrigger);
 
-    const btn = document.querySelector<HTMLButtonElement>('.menu-btn');
-    const header = document.querySelector('.nav');
-    btn?.addEventListener('click', () => {
-      const open = header?.classList.toggle('open');
-      btn.setAttribute('aria-expanded', String(!!open));
+    const btn = document.querySelector<HTMLButtonElement>('.menu-btn')!;
+    const header = document.querySelector<HTMLElement>('.nav')!;
+    const menu = document.querySelector<HTMLElement>('#site-menu')!;
+    const mobile = matchMedia('(max-width: 900px)');
+    function setMenu(open: boolean) {
+      header.classList.toggle('open', open);
+      btn.setAttribute('aria-expanded', String(open));
+      btn.setAttribute('aria-label', open ? '關閉選單' : '開啟選單');
+      menu.inert = mobile.matches && !open;
+    }
+    btn.addEventListener('click', () => setMenu(!header.classList.contains('open')));
+    menu.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { setMenu(false); btn.focus(); }
+      if (e.key === 'Tab' && mobile.matches && header.classList.contains('open')) {
+        const links = [...menu.querySelectorAll('a')];
+        if (!e.shiftKey && e.target === links.at(-1)) { e.preventDefault(); btn.focus(); }
+        if (e.shiftKey && e.target === links[0]) { e.preventDefault(); btn.focus(); }
+      }
     });
-
-    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    gsap.utils.toArray<HTMLElement>('.reveal').forEach((el) => {
-      if (reduce) return;
-      gsap.to(el, { opacity: 1, y: 0, duration: 1.1, ease: 'power2.out', scrollTrigger: { trigger: el, start: 'top 88%' } });
+    btn.addEventListener('keydown', e => {
+      if (e.key === 'Escape') setMenu(false);
+      if (e.key === 'Tab' && mobile.matches && header.classList.contains('open')) {
+        e.preventDefault(); (e.shiftKey ? menu.querySelectorAll('a').item(menu.querySelectorAll('a').length - 1) : menu.querySelector('a'))?.focus();
+      }
+    });
+    mobile.addEventListener('change', () => setMenu(false));
+    setMenu(false);
+    gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', () => {
+      gsap.utils.toArray<HTMLElement>('.reveal').forEach(el => {
+        gsap.fromTo(el, {opacity: 0, y: 36}, {opacity: 1, y: 0, duration: 1.1, ease: 'power2.out', scrollTrigger: {trigger: el, start: 'top 88%'}});
+      });
     });
   </script>
 </body>
 </html>
 
 <style>
+  .skip-link { position: fixed; left: 12px; top: -100px; z-index: 100; padding: 10px 16px; background: var(--paper); color: var(--ink); }
+  .skip-link:focus { top: 8px; }
   .nav {
     position: fixed; top: 0; left: 0; right: 0; z-index: 80; height: var(--nav-h);
     display: flex; align-items: center; justify-content: space-between; padding: 0 var(--gutter);
@@ -93,7 +116,7 @@ const isActive = (href: string) => path.startsWith(u(href));
   nav a { text-decoration: none; font-size: 14px; color: var(--paper-2); transition: color 0.3s; position: relative; }
   nav a:hover, nav a.active { color: var(--paper); }
   nav a.active::after { content: ''; position: absolute; left: 0; right: 0; bottom: -6px; height: 1px; background: var(--vermilion-text); }
-  .menu-btn { display: none; background: none; border: 0; width: 36px; height: 36px; cursor: pointer; position: relative; z-index: 2; }
+  .menu-btn { display: none; background: none; border: 0; width: 44px; height: 44px; cursor: pointer; position: relative; z-index: 2; }
   .menu-btn span { position: absolute; left: 7px; right: 7px; height: 1px; background: var(--paper); transition: transform 0.3s; }
   .menu-btn span:first-child { top: 14px; }
   .menu-btn span:last-child { top: 21px; }

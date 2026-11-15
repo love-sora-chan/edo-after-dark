@@ -12,6 +12,7 @@ export type Artwork = {
   series: string | null;
   seriesNo: number | null;
   year: string | null;
+  medium?: string;
   curatorialTime: string | null;
   timeLabel: string;
   parallel: boolean;

@@ -62,7 +62,12 @@ h1, h2, h3, .display { font-family: var(--serif-display); font-weight: 400; line
 }
 .btn:hover { background: var(--paper); color: var(--ink); border-color: var(--paper); }
 
-.reveal { opacity: 0; transform: translateY(36px); }
+.reveal { opacity: 1; transform: none; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+[id] { scroll-margin-top: calc(var(--nav-h) + 20px); }
+button, a, input, textarea, select { -webkit-tap-highlight-color: rgba(216,180,106,.2); }
 @media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
   .reveal { opacity: 1; transform: none; }
 }

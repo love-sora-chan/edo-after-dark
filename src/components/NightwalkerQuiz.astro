@@ -5,10 +5,10 @@ import { u } from '../lib/url';
 ---
 <section id="nightwalker-quiz" class="activity-panel" aria-labelledby="quiz-title" hidden>
   <div class="activity-top"><span class="seal">活動一 · 夜行視角</span><button type="button" data-activity-close>返回活動選單</button></div>
-  <h3 id="quiz-title" tabindex="-1">你是哪一種江戶夜行者？</h3>
+  <h3 id="quiz-title" tabindex="-1">你的江戶夜行，會先看見什麼？</h3>
   <p class="activity-note">以下是為觀展設計的想像情境，沒有標準答案。結果提供閱讀作品的視角，不是心理測驗，也不是對歷史人物身分的判定。</p>
   <div data-quiz-play>
-    <p class="step-count" data-quiz-progress aria-live="polite">第 1／6 題</p>
+    <p class="step-count" data-quiz-progress aria-live="polite">第 1／4 題</p>
     <progress max={quizQuestions.length} value="0" aria-label="已回答題數"></progress>
     <form data-quiz-form>
       {quizQuestions.map((q, index) => (
@@ -24,7 +24,7 @@ import { u } from '../lib/url';
   </div>
   <div data-quiz-result hidden>
     <h4 data-quiz-result-title tabindex="-1"></h4>
-    <p>這是你這次選擇較多的觀看方向；同一幅畫也可以從多種視角閱讀。並列時，保留所有同分視角。</p>
+    <p>結果列出你這次較常選擇的視角，同分者會一併顯示。同一幅畫也可以換個角度再看。</p>
     <p class="result-score" data-quiz-scores></p>
     {activityRoles.map((role) => {
       const artwork = byId(role.artworkId)!;
@@ -42,7 +42,7 @@ import { u } from '../lib/url';
         </article>
       );
     })}
-    <div class="activity-actions"><button type="button" class="primary" data-quiz-restart>重新測驗</button><button type="button" data-activity-open="observation">接著玩提燈尋跡 →</button></div>
+    <div class="activity-actions"><button type="button" class="primary" data-quiz-restart>換個視角再看</button><button type="button" data-activity-open="observation">接著玩提燈尋跡 →</button></div>
   </div>
 </section>
 
@@ -86,8 +86,8 @@ import { u } from '../lib/url';
     result.hidden = false;
     const names = activityRoles.filter((role) => winners.includes(role.id)).map((role) => role.name);
     const title = root.querySelector<HTMLElement>('[data-quiz-result-title]')!;
-    title.textContent = `你的夜行視角：${names.join(' × ')}`;
-    root.querySelector('[data-quiz-scores]')!.textContent = activityRoles.map((role) => `${role.name} ${scores[role.id]}／6`).join(' · ');
+    title.textContent = `你的觀展視角：${names.join(' × ')}`;
+    root.querySelector('[data-quiz-scores]')!.textContent = activityRoles.map((role) => `${role.name} ${scores[role.id]}／${quizQuestions.length}`).join(' · ');
     root.querySelectorAll<HTMLElement>('[data-role-result]').forEach((card) => { card.hidden = !winners.includes(card.dataset.roleResult as RoleId); });
     title.focus();
   });

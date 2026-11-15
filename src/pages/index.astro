@@ -6,7 +6,7 @@ import news from '../data/news.json';
 
 const hero = byId('A03')!;
 const gates = [
-  { seal: '壹', title: '時間', text: '從 18:00 黃昏到 05:00 黎明，看城市如何換上夜的樣貌。', href: 'timeline/', img: byId('A05')!.image!.src },
+  { seal: '壹', title: '時間', text: '從 18:00 黃昏到 05:00 黎明，看看夜裡有哪些活動。', href: 'timeline/', img: byId('A05')!.image!.src },
   { seal: '貳', title: '空間', text: '在江戶古地圖與今日東京之間，找到畫中的地點。', href: 'explore/', img: byId('B02')!.image!.src },
   { seal: '參', title: '人物', text: '夜遊者、商人、船夫、參拜者——誰構成了江戶的夜？', href: 'explore/#perspective', img: byId('A07')!.image!.src },
 ];
@@ -24,13 +24,13 @@ const gates = [
     <p class="sub">從黃昏到黎明的<b>城市夜生活</b></p>
     <h1 class="title" id="title">{'江戶不打烊'.split('').map((c) => <span>{c}</span>)}</h1>
     <div class="clock">今宵<strong class="num" id="clock">20:00</strong></div>
-    <div class="hint">移動提燈・照亮江戶<br />↓</div>
+    <div class="hint"><span class="motion-hint">移動提燈・照亮江戶</span><span class="static-hint">向下閱讀展覽</span><br />↓</div>
   </header>
 
   <section class="intro">
     <p class="reveal"><span class="seal">序</span></p>
-    <h2 class="reveal">江戶的夜晚，不是一個場景，<br />而是一整座城市。</h2>
-    <p class="reveal">日落之後，兩國橋上煙火升起，吉原的燈籠一盞盞亮起，淺草的參拜人潮走過田間小路。透過歌川廣重的浮世繪，從三個入口走進江戶的夜。</p>
+    <h2 class="reveal">江戶入夜後，<br />河岸、街道與遊里各有活動。</h2>
+    <p class="reveal">日落之後，兩國橋上煙火升起，吉原的燈籠一盞盞亮起，淺草的參拜人潮走過田間小路。本展選用歌川廣重的浮世繪，依時間、空間與人物三個方向介紹江戶的夜生活。</p>
     <a class="btn reveal" href={u('curation/')}>閱讀策展理念 →</a>
   </section>
 
@@ -61,7 +61,7 @@ const gates = [
 </Base>
 
 <style>
-  .hero { position: relative; height: 100vh; min-height: 560px; overflow: hidden; cursor: none; }
+  .hero { position: relative; height: 100vh; min-height: 560px; overflow: hidden; }
   .ambient { position: absolute; inset: -40px; background-position: center; background-size: cover; filter: blur(40px) brightness(0.25) saturate(0.6); transform: scale(1.1); }
   .print { position: absolute; left: 50%; top: 50%; height: min(86vh, 150vw); transform: translate(-50%, -47%); }
   .print img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -75,7 +75,7 @@ const gates = [
   .lantern { position: absolute; left: var(--x, 50%); top: var(--y, 45%); width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #ffd79a; box-shadow: 0 0 18px 6px rgba(255, 190, 110, 0.7); pointer-events: none; }
   #embers { position: absolute; inset: 0; pointer-events: none; }
   .title { position: absolute; right: max(5vw, 20px); top: 50%; transform: translateY(-50%); writing-mode: vertical-rl; font-size: clamp(48px, 7.5vw, 104px); line-height: 1.1; letter-spacing: 0.08em; text-shadow: 0 0 30px rgba(0, 0, 0, 0.8); }
-  .title span { display: inline-block; opacity: 0; }
+  .title span { display: inline-block; }
   .sub { position: absolute; left: max(5vw, 20px); top: 50%; transform: translateY(-50%); writing-mode: vertical-rl; letter-spacing: 0.3em; color: var(--mute); font-size: clamp(14px, 1.4vw, 18px); }
   .sub b { color: var(--vermilion-text); font-weight: 400; }
   .clock { position: absolute; left: var(--gutter); bottom: 28px; color: var(--mute); font-size: 14px; letter-spacing: 0.1em; }
@@ -117,6 +117,10 @@ const gates = [
     .print { height: 74vh; }
     .news li { grid-template-columns: 1fr; gap: 4px; }
   }
+  .hero:global([data-animated]) { cursor: none; }
+  .hero:not([data-animated]) .lit { mask-image: none; -webkit-mask-image: none; }
+  .hero:not([data-animated]) .lantern, .hero:not([data-animated]) .glow, .hero:not([data-animated]) #embers, .hero:not([data-animated]) .motion-hint { display: none; }
+  .hero:global([data-animated]) .static-hint { display: none; }
 </style>
 
 <script>
@@ -124,7 +128,9 @@ const gates = [
   import { ScrollTrigger } from 'gsap/ScrollTrigger';
   gsap.registerPlugin(ScrollTrigger);
 
+  gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', () => {
   const hero = document.getElementById('hero')!;
+  hero.dataset.animated = '';
   const print = document.getElementById('print')!;
   const root = document.documentElement;
   const pos = { x: innerWidth * 0.5, y: innerHeight * 0.45 };
@@ -132,9 +138,10 @@ const gates = [
   const r = { v: 170 };
   let lastMove = 0;
 
-  hero.addEventListener('pointermove', (e) => { target.x = e.clientX; target.y = e.clientY; lastMove = performance.now(); });
+  const pointerMove = (e: PointerEvent) => { target.x = e.clientX; target.y = e.clientY; lastMove = performance.now(); };
+  hero.addEventListener('pointermove', pointerMove);
 
-  gsap.ticker.add(() => {
+  const lanternTick = () => {
     const t = performance.now();
     if (t - lastMove > 2500) {
       target.x = innerWidth * (0.5 + 0.22 * Math.sin(t / 2600));
@@ -149,7 +156,8 @@ const gates = [
     root.style.setProperty('--px', `${pos.x - b.left}px`);
     root.style.setProperty('--py', `${pos.y - b.top}px`);
     root.style.setProperty('--r', `${r.v * (1 + 0.03 * Math.sin(t / 180))}px`);
-  });
+  };
+  gsap.ticker.add(lanternTick);
 
   gsap.fromTo('#title span', { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 1.6, stagger: 0.25, ease: 'power2.out', delay: 0.4 });
   gsap.to(r, { v: Math.max(innerWidth, innerHeight), ease: 'none', scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: 1 } });
@@ -164,7 +172,7 @@ const gates = [
   size();
   addEventListener('resize', size);
   const P = Array.from({ length: 60 }, () => ({ x: Math.random() * c.width, y: Math.random() * c.height, v: 0.2 + Math.random() * 0.6, s: 0.6 + Math.random() * 1.8, p: Math.random() * 6 }));
-  gsap.ticker.add(() => {
+  const emberTick = () => {
     const t = performance.now();
     ctx.clearRect(0, 0, c.width, c.height);
     for (const e of P) {
@@ -174,5 +182,12 @@ const gates = [
       ctx.fillStyle = `rgba(255,${170 + Math.floor(e.p * 10)},90,${a * 0.8})`;
       ctx.beginPath(); ctx.arc(e.x, e.y, e.s, 0, 7); ctx.fill();
     }
+  };
+  gsap.ticker.add(emberTick);
+  return () => {
+    gsap.ticker.remove(lanternTick); gsap.ticker.remove(emberTick);
+    hero.removeEventListener('pointermove', pointerMove); removeEventListener('resize', size);
+    ctx.clearRect(0, 0, c.width, c.height); delete hero.dataset.animated;
+  };
   });
 </script>
