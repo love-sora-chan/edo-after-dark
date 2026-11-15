@@ -149,6 +149,8 @@ export function initObservationChallenge(root: HTMLElement) {
     function reveal(outcome: 'answered' | 'skipped') {
       if (id in outcomes) return;
       outcomes[id] = outcome; paintOutcome(id); updateProgress(); save();
+      // Glide into the question's detail once the answer is revealed.
+      round.querySelector('[data-art-viewer]')!.dispatchEvent(new Event('viewer-focus'));
     }
     form.addEventListener('submit', event => {
       event.preventDefault();

@@ -21,7 +21,7 @@ const stations = times.map((t) => ({
   <div class="sky" id="sky"></div>
   <div class="stars" id="stars"></div>
   <div class="moon" id="moon"></div>
-  <div class="hud"><div class="now"><strong class="num" id="now">序章</strong><span id="nowLabel">白晝</span></div></div>
+  <div class="hud idle"><div class="now"><strong class="num" id="now">序章</strong><span id="nowLabel">白晝</span></div></div>
   <div class="ticks" id="ticks" aria-hidden="true">{stations.map(() => <i></i>)}</div>
 
   <div class="timeline-controls" aria-label="時間軸瀏覽">
@@ -92,7 +92,8 @@ const stations = times.map((t) => ({
   .sky { position: fixed; inset: 0; background: #c79a6a; z-index: 0; }
   .stars { position: fixed; inset: 0; z-index: 1; opacity: 0; background-image: radial-gradient(1.2px 1.2px at 12% 18%, #fff 50%, transparent), radial-gradient(1px 1px at 28% 8%, #fff 50%, transparent), radial-gradient(1.4px 1.4px at 46% 22%, #fff 50%, transparent), radial-gradient(1px 1px at 63% 12%, #fff 50%, transparent), radial-gradient(1.3px 1.3px at 78% 26%, #fff 50%, transparent), radial-gradient(1px 1px at 90% 6%, #fff 50%, transparent), radial-gradient(1px 1px at 6% 34%, #fff 50%, transparent), radial-gradient(1.2px 1.2px at 54% 4%, #fff 50%, transparent), radial-gradient(1px 1px at 36% 30%, #fff 50%, transparent), radial-gradient(1px 1px at 84% 38%, #fff 50%, transparent); }
   .moon { position: fixed; z-index: 1; width: 70px; height: 70px; border-radius: 50%; background: #f3e6bf; box-shadow: 0 0 60px 18px rgba(243, 230, 191, 0.25); left: -10vw; top: 30vh; }
-  .hud { position: fixed; top: calc(var(--nav-h) + 12px); left: 50%; transform: translateX(-50%); z-index: 30; text-align: center; pointer-events: none; background: rgba(7,9,26,.72); padding: 8px 18px; }
+  .hud { position: fixed; top: calc(var(--nav-h) + 12px); left: 50%; transform: translateX(-50%); z-index: 30; text-align: center; pointer-events: none; background: rgba(7,9,26,.72); padding: 8px 18px; transition: opacity .4s; }
+  .hud.idle { opacity: 0; }
   .now strong { display: block; font-size: 44px; line-height: 1; color: var(--gold); font-weight: 400; }
   .now span { font-size: 13px; letter-spacing: 0.2em; color: rgba(239, 230, 210, 0.75); }
   .ticks { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 30; display: flex; gap: 6px; }
@@ -105,7 +106,7 @@ const stations = times.map((t) => ({
   .river :global(path) { fill: none; stroke: rgba(239, 230, 210, 0.35); stroke-width: 1.2; }
   .panel { flex: 0 0 auto; min-height: 100svh; scroll-snap-align: start; position: relative; display: flex; align-items: center; }
   .intro { width: 100vw; justify-content: center; gap: 6vw; }
-  .intro h1 { writing-mode: vertical-rl; font-size: clamp(52px, 8vw, 110px); letter-spacing: 0.1em; }
+  .intro h1 { writing-mode: vertical-rl; font-size: clamp(48px, min(8vw, 11vh), 110px); letter-spacing: 0.1em; }
   .intro .lead { writing-mode: vertical-rl; font-size: 17px; letter-spacing: 0.25em; line-height: 2.4; max-height: 62vh; }
   .intro .go { margin-top: 10px; font-size: 13px; letter-spacing: 0.25em; color: rgba(239, 230, 210, 0.7); }
   .station { padding: 0 5vw 0 4vw; gap: 3vw; }
@@ -143,7 +144,8 @@ const stations = times.map((t) => ({
     .cap p { display: block; }
     .parallel { width: 180px; margin-bottom: 24vh; }
   }
-  .intro-note { position: absolute; bottom: 6vh; left: 8vw; right: 8vw; max-width: 720px; margin: auto; font-size: 13px; line-height: 1.8; color: var(--paper); background: rgba(7,9,26,.72); padding: 14px 18px; }
+  .intro-note { order: -1; align-self: center; width: min(320px, 26vw); margin-bottom: 8vh; font-size: 13px; line-height: 1.9; color: var(--paper); background: rgba(7,9,26,.72); padding: 16px 18px; border-left: 2px solid var(--gold); }
+  .intro-note .go { margin-top: 12px; }
   .cap { background: rgba(7,9,26,.76); padding: 16px; }
   .end { background: rgba(7,9,26,.8); }
   .transition { border-right: 1px solid var(--gold); padding-right: 14px; }
@@ -160,7 +162,7 @@ const stations = times.map((t) => ({
     .intro { min-height: 100svh; justify-content: center; }
     .intro h1 { font-size: 48px; }
     .intro .lead { font-size: 15px; }
-    .intro-note { position: static; padding: 16px; margin-top: 10px; }
+    .intro-note { order: 0; width: auto; margin: 10px 0 0; padding: 16px; }
     .big { position: static; align-self: flex-start; font-size: 44px; color: var(--gold); -webkit-text-stroke: 0; }
     figure { height: 34svh; max-width: 100%; padding: 10px 10px 20px; }
     figure.land { width: 100%; height: auto; }
@@ -189,6 +191,7 @@ const stations = times.map((t) => ({
   const instruction = document.querySelector('[data-scroll-instruction]')!;
   const sky = document.getElementById('sky')!, stars = document.getElementById('stars')!, moon = document.getElementById('moon')!;
   const now = document.getElementById('now')!, label = document.getElementById('nowLabel')!;
+  const hud = document.querySelector('.hud');
   const ticks = [...document.querySelectorAll('#ticks i')];
   let pinned: ScrollTrigger | undefined;
   let shown = -1;
@@ -208,6 +211,7 @@ const stations = times.map((t) => ({
     shown = i;
     previous.disabled = i === 0; next.disabled = i === panels.length - 1;
     now.textContent = panel.dataset.time ?? '序章'; label.textContent = panel.dataset.label ?? '白晝';
+    hud?.classList.toggle('idle', i === 0);
     const nightIndex = stations.filter(s => !s.classList.contains('prologue')).indexOf(panel);
     ticks.forEach((tick, k) => tick.classList.toggle('on', k <= nightIndex));
   }

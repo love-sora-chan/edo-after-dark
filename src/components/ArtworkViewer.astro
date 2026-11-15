@@ -35,9 +35,11 @@ const image = artwork.image!;
     const focusButtons = [...viewer.querySelectorAll<HTMLButtonElement>('[data-view-focus]')];
     let scale = 1, x = 0, y = 0;
     let drag: { id: number; x: number; y: number } | null = null;
-    function render(announce = true, selected?: HTMLButtonElement) {
+    function render(announce = true, selected?: HTMLButtonElement, glide = true) {
       x = Math.max(100 - scale * 100, Math.min(0, x));
       y = Math.max(100 - scale * 100, Math.min(0, y));
+      // Buttons and auto-focus glide like a camera move; dragging and arrow keys follow the hand directly.
+      stage.classList.toggle('gliding', glide);
       img.style.transform = `translate(${x}%, ${y}%) scale(${scale})`;
       stage.classList.toggle('zoomed', scale > 1);
       full.setAttribute('aria-pressed', String(scale === 1));
@@ -53,7 +55,8 @@ const image = artwork.image!;
       scale = next; render();
     }
     full.addEventListener('click', reset);
-    viewer.addEventListener('viewer-reset', reset);
+    viewer.addEventListener('viewer-reset', () => { stage.classList.remove('gliding'); scale = 1; x = y = 0; render(true, undefined, false); });
+    viewer.addEventListener('viewer-focus', () => { if (scale === 1) focusButtons[0]?.click(); });
     inside.addEventListener('click', () => zoom(.5));
     outside.addEventListener('click', () => zoom(-.5));
     focusButtons.forEach((b) => b.addEventListener('click', () => {
@@ -71,7 +74,7 @@ const image = artwork.image!;
       x += (e.clientX - drag.x) / stage.clientWidth * 100;
       y += (e.clientY - drag.y) / stage.clientHeight * 100;
       drag = {id: e.pointerId, x: e.clientX, y: e.clientY};
-      render(false);
+      render(false, undefined, false);
     });
     const stop = () => { drag = null; stage.classList.remove('dragging'); };
     stage.addEventListener('pointerup', stop);
@@ -87,7 +90,7 @@ const image = artwork.image!;
         if (e.key === 'ArrowRight') x -= 8;
         if (e.key === 'ArrowUp') y += 8;
         if (e.key === 'ArrowDown') y -= 8;
-        render(false);
+        render(false, undefined, false);
       }
     });
     const error = viewer.querySelector<HTMLElement>('[data-image-error]')!;
@@ -100,7 +103,9 @@ const image = artwork.image!;
 <style>
   .art-stage { overflow: hidden; background: var(--ink); width: 100%; }
   .art-stage img { width: 100%; height: 100%; object-fit: contain; transform-origin: 0 0; display: block; user-select: none; }
+  .art-stage.gliding img { transition: transform 1.1s cubic-bezier(.65, 0, .35, 1); }
   .art-stage.zoomed { cursor: grab; touch-action: none; }
+  @media (prefers-reduced-motion: reduce) { .art-stage.gliding img { transition: none; } }
   .art-stage.dragging { cursor: grabbing; }
   .viewer-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
   .viewer-controls button[aria-pressed="true"] { border-color: var(--gold); color: var(--gold); }
