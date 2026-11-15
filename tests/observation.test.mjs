@@ -2,6 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { observationQuestions, observationSources, observationArtworkOrder, selectObservationSession, shuffled } from '../src/data/observation.ts';
+import { parseObservationSnapshot, observationVersion } from '../src/lib/observation-session.ts';
+import { quizQuestions, scoreQuiz, roleIds } from '../src/data/activities.ts';
 
 const artworks = JSON.parse(readFileSync(new URL('../src/data/artworks.json', import.meta.url), 'utf8'));
 const byId = new Map(observationQuestions.map((q) => [q.id, q]));
@@ -63,4 +65,81 @@ test('shuffling answer display order preserves answer identities and does not mu
     assert.equal(display.find((option) => option.id === q.answer).text, q.choices[q.answer]);
     assert.deepEqual(display.map((option) => option.id).sort(), options.map((option) => option.id).sort());
   }
+});
+
+test('each revised question has distinct option feedback and valid viewing/reading targets', () => {
+  for (const q of observationQuestions) {
+    assert.equal(q.choices.length, 3, q.id);
+    assert.equal(new Set(q.choices).size, 3, q.id);
+    assert.equal(q.feedback.length, 3, q.id);
+    assert.equal(q.feedback[q.answer], '', q.id);
+    assert.equal(new Set(q.feedback.filter(Boolean)).size, 2, q.id);
+    for (const [index, message] of q.feedback.entries()) if (index !== q.answer) {
+      assert.ok(message.length > 12, q.id);
+      assert.ok(!message.includes(q.choices[q.answer]), q.id + ' must guide rather than repeat the correct choice');
+    }
+    for (const focus of q.focuses ?? [q.focus]) {
+      assert.ok(focus.x >= 0 && focus.x <= 1 && focus.y >= 0 && focus.y <= 1 && focus.scale >= 1 && focus.scale <= 5, q.id);
+    }
+    for (const id of q.readingArtworkIds ?? [q.artworkId]) assert.ok(artworks.some(a => a.id === id && a.sections.observe && a.sections.people), q.id);
+    if (q.compareArtworkId) {
+      assert.ok(q.readingArtworkIds.includes(q.compareArtworkId), q.id);
+      assert.ok(artworks.some(a => a.id === q.compareArtworkId && a.image), q.id);
+    }
+  }
+  assert.equal(byId.get('suruga-brand').phase, '延伸');
+});
+
+const snapshot = () => {
+  const session = selectObservationSession('painting', 'A05');
+  const first = byId.get(session[0]);
+  return {version: observationVersion, mode: 'painting', painting: 'A05', session, index: 1,
+    outcomes: {[first.id]: 'answered'}, answers: {[first.id]: first.answer},
+    notes: {[first.id]: '餐具的位置改變了我對空房間的看法。\n<script>文字應原樣顯示</script>'}, view: 'play'};
+};
+
+test('saved progress restores route, answer identities and unmodified optional notes', () => {
+  const value = snapshot();
+  assert.deepEqual(parseObservationSnapshot(JSON.stringify(value)), value);
+  const id = value.session[1];
+  value.outcomes[id] = 'skipped'; value.view = 'notebook';
+  assert.deepEqual(parseObservationSnapshot(JSON.stringify(value)), value);
+});
+
+test('stale, corrupt, forged or incomplete progress is rejected safely', () => {
+  assert.equal(parseObservationSnapshot('{'), null);
+  assert.equal(parseObservationSnapshot(null), null);
+  const cases = [
+    value => {value.version = 'old';},
+    value => {value.index = 20;},
+    value => {value.session[1] = value.session[0];},
+    value => {value.session[1] = 'unknown';},
+    value => {value.answers[value.session[0]] = (value.answers[value.session[0]] + 1) % 3;},
+    value => {value.notes[value.session[0]] = '字'.repeat(2001);},
+    value => {value.notes[value.session[1]] = '尚未作答';},
+    value => {value.outcomes = {};},
+    value => {value.view = 'notebook';},
+    value => {value.mode = 'full';},
+    value => {value.outcomes.unknown = 'answered';},
+  ];
+  for (const mutate of cases) {
+    const value = snapshot(); mutate(value);
+    assert.equal(parseObservationSnapshot(JSON.stringify(value)), null);
+  }
+});
+
+test('random progress validates all three groups and keeps extension works out of the short route', () => {
+  const session = selectObservationSession('random', 'A03', generator(41));
+  const value = {...snapshot(), mode: 'random', session, index: 0, outcomes: {}, answers: {}, notes: {}};
+  assert.deepEqual(parseObservationSnapshot(JSON.stringify(value)), value);
+  assert.ok(session.every(id => byId.get(id).artworkId.startsWith('A')));
+  [value.session[1], value.session[2]] = [value.session[2], value.session[1]];
+  assert.equal(parseObservationSnapshot(JSON.stringify(value)), null);
+});
+
+test('four scenario quiz keeps all viewing approaches available and handles ties', () => {
+  assert.equal(quizQuestions.length, 4);
+  for (const q of quizQuestions) assert.deepEqual(q.choices.map(c => c.role).sort(), [...roleIds].sort());
+  assert.deepEqual(scoreQuiz(roleIds).winners, [...roleIds]);
+  assert.deepEqual(scoreQuiz(['night-workers', 'night-workers', 'merchants', null]).winners, ['night-workers']);
 });

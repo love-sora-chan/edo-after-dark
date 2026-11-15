@@ -25,9 +25,9 @@ const artworkRefs = ordered.map((a) => ({ a, apa: artworkApa(a) }));
     </section>
 
     <section class="cat" id="observation-sources">
-      <h2>活動二：作品精讀與歷史背景</h2>
-      <p>逐題解說附有來源。以下為核對所用的館藏與機構頁面；檢索日期：2026 年 11 月 13 日。同圖異印本與一般歷史背景分別標明，不把推論改寫成已確證事件。</p>
-      <ul>{Object.values(observationSources).map((s) => <li>{s.institution}. (n.d.). <em>{s.title}</em> ({s.record}). Retrieved November 13, 2026, from <a href={s.url} target="_blank" rel="noopener">{s.url}</a><small>{s.scope}</small></li>)}</ul>
+      <h2>作品精讀與活動二的解說來源</h2>
+      <p>活動二的答題線索已整理在站內作品頁，以下館藏與機構頁面供延伸閱讀和查核，不是作答前必須閱讀的材料。原書目檢索日期：2026 年 11 月 13 日。各條目標明資料來自本頁印本、同圖異印本或一般歷史背景；涉及推測的解讀會保留原有語氣。</p>
+      <ul>{Object.values(observationSources).map((s) => <li>{s.institution}. (n.d.). <em>{s.title}</em> ({s.record}). Retrieved {'accessed' in s ? 'November 15, 2026' : 'November 13, 2026'}, from <a href={s.url} target="_blank" rel="noopener">{s.url}</a><small>{s.scope}</small></li>)}</ul>
     </section>
 
     {refs.map((c) => (
@@ -35,7 +35,7 @@ const artworkRefs = ordered.map((a) => ({ a, apa: artworkApa(a) }));
         <h2>{c.category}</h2>
         <ul>
           {c.items.map((r) => (
-            <li><span set:html={em(r.apa)} />{r.note && <small>{r.note}</small>}</li>
+            <li><span set:html={em(r.apa)} />{r.url && <a class="open-source" href={r.url} target="_blank" rel="noopener"> 開啟來源 ↗</a>}{r.note && <small>{r.note}</small>}</li>
           ))}
         </ul>
       </section>

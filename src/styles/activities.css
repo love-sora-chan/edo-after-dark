@@ -19,6 +19,9 @@
 .activity-panel .answer { display: flex; align-items: baseline; gap: 12px; padding: 13px 16px; border: 1px solid var(--line); cursor: pointer; color: var(--paper-2); font-size: 15px; }
 .activity-panel .answer:has(input:checked) { border-color: var(--gold); background: #d8b46a0d; color: var(--paper); }
 .activity-panel input { accent-color: var(--gold); flex-shrink: 0; }
+.activity-panel button, .activity-panel .activity-link, .activity-panel select { min-height: 44px; }
+.activity-panel textarea { max-width: 100%; }
+.activity-panel .source-note, .activity-panel .activity-note { overflow-wrap: anywhere; }
 .activity-panel .activity-feedback { margin-top: 14px; color: var(--gold); min-height: 1.9em; }
 .activity-panel .result-card { border-top: 1px solid var(--line); padding: 22px 0; }
 .activity-panel .result-card h4 { color: var(--gold); }
